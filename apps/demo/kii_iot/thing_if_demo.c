@@ -236,9 +236,54 @@ static kii_bool_t custom_push_handler(
     return ret;
 }
 
+static kii_thing_if_command_handler_resource_t command_handler_resource;
+static kii_thing_if_state_updater_resource_t state_updater_resource;
+static char command_handler_buff[EX_COMMAND_HANDLER_BUFF_SIZE];
+static char state_updater_buff[EX_STATE_UPDATER_BUFF_SIZE];
+static char mqtt_buff[EX_MQTT_BUFF_SIZE];
+static kii_thing_if_t kii_thing_if;
+
 static int onboard_command ( int argc, char *argv[] ) {
-	printf("onboard_command\n");
-	return ERR_CMD_OK;
+    kii_bool_t result;
+
+    char *vendorThingID = NULL;
+    char *thingID = NULL;
+    char *password = NULL;
+
+    for (int i = 1; i < argc; ++i) {
+        if (strncmp(argv[i], "vendor-thing-id=", 16) == 0) {
+            vendorThingID = argv[i] + 16;
+        } else if (strncmp(argv[i], "thing-id=", 9) == 0) {
+            thingID = argv[i] + 9;
+        } else if (strncmp(argv[i], "password=", 9) == 0) {
+            password = argv[i] + 9;
+        }
+    }
+    if (vendorThingID == NULL && thingID == NULL) {
+        printf("neither vendor-thing-id and thing-id are specified.\n");
+        return ERR_CMD_OK;
+    }
+    if (password == NULL) {
+        printf("password is not specified.\n");
+        return ERR_CMD_OK;
+    }
+    if (vendorThingID != NULL && thingID != NULL) {
+        printf("both vendor-thing-id and thing-id is specified.  either of one should be specified.\n");
+        return ERR_CMD_OK;
+    }
+    if (vendorThingID != NULL) {
+        result = onboard_with_vendor_thing_id(&kii_thing_if, vendorThingID,
+                password, NULL, NULL);
+    } else {
+        result = onboard_with_thing_id(&kii_thing_if, thingID,
+                password);
+    }
+    if (result == KII_FALSE) {
+        printf("failed to onboard.\n");
+    } else {
+        printf("onboard succeed.\n");
+    }
+    return ERR_CMD_OK;
 }
 
 #define MAX_LINE_LENGTH  (256)
@@ -250,16 +295,9 @@ static char history_buffer_storage[MAX_LINE_LENGTH * MAX_HISTORY_LENGTH];
 static const command_t commands[] =
 {
     //ALL_COMMANDS
-	{"onboard", onboard_command, 1, NULL, NULL, "vendor-thing-id/thing-id/passwod", ""},
+    {"onboard", onboard_command, 2, NULL, NULL, "[vendor-thing-id/thing-id]=* passwod=*", ""},
     CMD_TABLE_END
 };
-
-static kii_thing_if_command_handler_resource_t command_handler_resource;
-static kii_thing_if_state_updater_resource_t state_updater_resource;
-static char command_handler_buff[EX_COMMAND_HANDLER_BUFF_SIZE];
-static char state_updater_buff[EX_STATE_UPDATER_BUFF_SIZE];
-static char mqtt_buff[EX_MQTT_BUFF_SIZE];
-static kii_thing_if_t kii_thing_if;
 
 /******************************************************
  *               Function Definitions
@@ -286,13 +324,18 @@ void application_start( void )
 
     wiced_rtos_init_mutex(&m_mutex);
 
-    wiced_init();
+    ret = wiced_init();
+    if ( ret != WICED_SUCCESS )
+    {
+        WPRINT_APP_INFO( ( "wiced_init failed.\n\n" ) );
+        return;
+    }
 
     /* Disable roaming to other access points */
-    //wiced_wifi_set_roam_trigger( -99 ); /* -99dBm ie. extremely low signal level */
+    wiced_wifi_set_roam_trigger( -99 ); /* -99dBm ie. extremely low signal level */
 
     /* Bringup the network interface */
-    wiced_network_up( WICED_ETHERNET_INTERFACE, WICED_USE_EXTERNAL_DHCP_SERVER, NULL );
+    ret = wiced_network_up( WICED_STA_INTERFACE, WICED_USE_EXTERNAL_DHCP_SERVER, NULL );
     if ( ret != WICED_SUCCESS )
     {
         WPRINT_APP_INFO( ( "\nNot able to join the requested AP\n\n" ) );
@@ -301,9 +344,9 @@ void application_start( void )
 
     if (init_kii_thing_if(&kii_thing_if, EX_APP_ID, EX_APP_KEY, EX_APP_SITE,
             &command_handler_resource, &state_updater_resource, NULL) == KII_FALSE) {
-        WPRINT_APP_ERROR( ( "init failed.\n" ) );
+        WPRINT_APP_ERROR( ( "kii init failed.\n" ) );
     } else {
-        WPRINT_APP_INFO( ( "init succeed.\n" ) );
+        WPRINT_APP_INFO( ( "kii init succeed.\n" ) );
     }
 
     /* Run the main application function */
