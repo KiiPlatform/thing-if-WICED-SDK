@@ -4,15 +4,17 @@ This is kii thing-if SDK porting to WICED SDK, based on Avnet BCM4343W IoT Start
 ## Requires
 
 * [WICED Studio](https://community.cypress.com/community/wiced-wifi/wiced-wifi-documentation)
+
 This is IDE and SDK for WICED.
 
 * [BCM94343W\_AVN](https://github.com/CloudConnectKits/WICED-SDK-3.5.2_Platform_Files)
+
 If you use Avnet BCM4343W Iot Starter Kit, this is necessary.
 Please download and put to WICED/WICED-Studio-[version]/43xxx\_Wi-Fi/platforms.
 
 ## How to use
 * Connect Avnet BCM4343W Iot Starter Kit to your PC, and open terminal application. Reference: [Creating an AWS WICED IoT solution](https://community.cypress.com/docs/DOC-2623).
 * Copy apps folder to WICED/WICED-Studio-[version]/43xxx\_Wi-Fi/.
-* In WICED Studio, add make target "demo.kii\_iot-BCM94343W\_AVN download\_apps download run" into 43xxx\_Wifi.
+* On WICED Studio, add make target "demo.kii\_iot-BCM94343W\_AVN download\_apps download run" into 43xxx\_Wifi.
 * Run make target.
-* In Terminal, type "onboard [vendor-thing-id/thing-id]={id} password={password}"
+* On Terminal, type "onboard [vendor-thing-id/thing-id]={id} password={password}"
