@@ -12,7 +12,8 @@ GLOBAL_DEFINES += CONSOLE_ENABLE_THREADS
 
 NAME := App_thing_if_demo
 
-$(NAME)_DEFINES += KII_PUSH_KEEP_ALIVE_INTERVAL_SECONDS=300
+$(NAME)_DEFINES += KII_PUSH_KEEP_ALIVE_INTERVAL_SECONDS=300 \
+                   KII_JSON_FIXED_TOKEN_NUM=256
 
 $(NAME)_SOURCES := ./thing_if_demo.c \
                    ./kii_thing_if_environment_impl.c \
