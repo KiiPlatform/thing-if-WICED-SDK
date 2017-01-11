@@ -145,7 +145,7 @@ kii_socket_code_t mqtt_connect_cb_impl(
         return KII_SOCKETC_FAIL;
     }
     wiced_tls_init_context(&(context->tls_context), NULL, NULL);
-    wiced_tcp_enable_tls(&(context->socket), &(context->tls_context));
+    //wiced_tcp_enable_tls(&(context->socket), &(context->tls_context));
     context->packet = NULL;
     context->packet_offset = 0;
 
@@ -162,6 +162,7 @@ kii_socket_code_t mqtt_connect_cb_impl(
     }
 
     socket_context->app_context = context;
+    socket_context->socket = 1;
     return KII_SOCKETC_OK;
 }
 
@@ -232,7 +233,22 @@ kii_socket_code_t mqtt_close_cb_impl(kii_socket_context_t* socket_context)
     wiced_tcp_delete_socket(&(context->socket));
     free(context);
     socket_context->app_context = NULL;
+    socket_context->socket = 0;
     return KII_SOCKETC_OK;
+}
+
+typedef struct {
+	KII_TASK_ENTRY entry;
+	void* param;
+} task_thread_arg_t;
+
+static void task_thread_function( wiced_thread_arg_t arg ) {
+    task_thread_arg_t* task_arg = (task_thread_arg_t*)arg;
+    KII_TASK_ENTRY entry = task_arg->entry;
+    void* param = task_arg->param;
+    free(task_arg);
+
+    entry(param);
 }
 
 kii_task_code_t task_create_cb_impl(
@@ -241,11 +257,11 @@ kii_task_code_t task_create_cb_impl(
         void* param)
 {
     unsigned int stk_size = 0;
-    unsigned int priority = 0;
+    unsigned int priority = RTOS_DEFAULT_THREAD_PRIORITY;
 
     if (strcmp(name, KII_THING_IF_TASK_NAME_STATUS_UPDATE) == 0) {
         stk_size = 2048;
-        priority = 1;
+        priority = RTOS_LOWER_PRIORTIY_THAN(priority);
     } else if (strcmp(name, KII_TASK_NAME_RECV_MSG) == 0) {
         stk_size = 4096;
 #ifdef KII_PUSH_KEEP_ALIVE_INTERVAL_SECONDS
@@ -254,8 +270,12 @@ kii_task_code_t task_create_cb_impl(
 #endif
     }
 
+    task_thread_arg_t *task_arg = (task_thread_arg_t*)malloc(sizeof(task_thread_arg_t));
+    task_arg->entry = entry;
+    task_arg->param = param;
     wiced_thread_t thread;
-    if (wiced_rtos_create_thread(&thread, priority, name, entry, stk_size, param) != WICED_SUCCESS) {
+    if (wiced_rtos_create_thread(&thread, priority, name, task_thread_function, stk_size, task_arg) != WICED_SUCCESS) {
+    	free(task_arg);
         return KII_TASKC_FAIL;
     } else {
         return KII_TASKC_OK;
