@@ -1,7 +1,12 @@
 #include "wiced.h"
 #include "kii_thing_if.h"
 
+#include "wiced_log.h"
+
 #include <command_console_commands.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <unistd.h>
 
 /* Go to https:/developer.kii.com and create app for you! */
 const char EX_APP_ID[] = "b8d819c8";
@@ -26,6 +31,10 @@ typedef struct prv_smartlight_t {
 
 static prv_smartlight_t m_smartlight;
 static wiced_mutex_t m_mutex;
+#ifndef KII_JSON_FIXED_TOKEN_NUM
+#define KII_JSON_TOKENS_NUM 64
+static kii_json_token_t kii_json_tokens[KII_JSON_TOKENS_NUM];
+#endif
 
 static kii_json_parse_result_t prv_json_read_object(
         const char* json,
@@ -34,10 +43,18 @@ static kii_json_parse_result_t prv_json_read_object(
         char error[EMESSAGE_SIZE + 1])
 {
     kii_json_t kii_json;
-    kii_json_resource_t* resource_pointer = NULL;
+#ifndef KII_JSON_FIXED_TOKEN_NUM
+    kii_json_resource_t resource;
+#endif
 
     memset(&kii_json, 0, sizeof(kii_json));
-    kii_json.resource = resource_pointer;
+#ifndef KII_JSON_FIXED_TOKEN_NUM
+    resource.tokens = kii_json_tokens;
+    resource.tokens_num = KII_JSON_TOKENS_NUM;
+    kii_json.resource = &resource;
+#else
+    kii_json.resource = NULL;
+#endif
     kii_json.error_string_buff = error;
     kii_json.error_string_length = EMESSAGE_SIZE + 1;
 
@@ -46,8 +63,8 @@ static kii_json_parse_result_t prv_json_read_object(
 
 static kii_bool_t prv_get_smartlight_info(prv_smartlight_t* smartlight)
 {
-	if (wiced_rtos_lock_mutex(&m_mutex) != WICED_SUCCESS) {
-		return KII_FALSE;
+    if (wiced_rtos_lock_mutex(&m_mutex) != WICED_SUCCESS) {
+        return KII_FALSE;
     }
     smartlight->power = m_smartlight.power;
     smartlight->brightness = m_smartlight.brightness;
@@ -63,9 +80,9 @@ static kii_bool_t prv_get_smartlight_info(prv_smartlight_t* smartlight)
 
 static kii_bool_t prv_set_smartlight_info(const prv_smartlight_t* smartlight)
 {
-	if (wiced_rtos_lock_mutex(&m_mutex) != WICED_SUCCESS) {
-		return KII_FALSE;
-	}
+    if (wiced_rtos_lock_mutex(&m_mutex) != WICED_SUCCESS) {
+        return KII_FALSE;
+    }
     m_smartlight.power = smartlight->power;
     m_smartlight.brightness = smartlight->brightness;
     m_smartlight.color[0] = smartlight->color[0];
@@ -87,11 +104,11 @@ static kii_bool_t action_handler(
 {
     prv_smartlight_t smartlight;
 
-    printf("schema=%s, schema_version=%d, action name=%s, action params=%s\n",
+    wiced_log_printf("schema=%s, schema_version=%d, action name=%s, action params=%s\n",
             schema, schema_version, action_name, action_params);
 
     if (strcmp(schema, "SmartLight-Demo") != 0 || schema_version != 1) {
-        printf("invalid schema: %s %d\n", schema, schema_version);
+        wiced_log_printf("invalid schema: %s %d\n", schema, schema_version);
         snprintf(error, EMESSAGE_SIZE + 1, "invalid schema: %s %d",
                 schema, schema_version);
         return KII_FALSE;
@@ -99,7 +116,7 @@ static kii_bool_t action_handler(
 
     memset(&smartlight, 0x00, sizeof(smartlight));
     if (prv_get_smartlight_info(&smartlight) == KII_FALSE) {
-        printf("fail to lock.\n");
+        wiced_log_printf("fail to lock.\n");
         strcpy(error, "fail to lock.");
         return KII_FALSE;
     }
@@ -112,7 +129,7 @@ static kii_bool_t action_handler(
         fields[1].path = NULL;
         if(prv_json_read_object(action_params, strlen(action_params),
                         fields, error) !=  KII_JSON_PARSE_SUCCESS) {
-            printf("invalid turnPower json\n");
+            wiced_log_printf("invalid turnPower json\n%s\n", error);
             return KII_FALSE;
         }
         smartlight.power = fields[0].field_copy.boolean_value;
@@ -125,7 +142,7 @@ static kii_bool_t action_handler(
         fields[1].path = NULL;
         if(prv_json_read_object(action_params, strlen(action_params),
                         fields, error) !=  KII_JSON_PARSE_SUCCESS) {
-            printf("invalid brightness json\n");
+            wiced_log_printf("invalid brightness json\n");
             return KII_FALSE;
         }
         smartlight.brightness = fields[0].field_copy.int_value;
@@ -142,7 +159,7 @@ static kii_bool_t action_handler(
         fields[3].path = NULL;
         if(prv_json_read_object(action_params, strlen(action_params),
                          fields, error) !=  KII_JSON_PARSE_SUCCESS) {
-            printf("invalid color json\n");
+            wiced_log_printf("invalid color json\n");
             return KII_FALSE;
         }
         smartlight.color[0] = fields[0].field_copy.int_value;
@@ -157,17 +174,17 @@ static kii_bool_t action_handler(
         fields[1].path = NULL;
         if(prv_json_read_object(action_params, strlen(action_params),
                         fields, error) !=  KII_JSON_PARSE_SUCCESS) {
-            printf("invalid colorTemperature json\n");
+            wiced_log_printf("invalid colorTemperature json\n");
             return KII_FALSE;
         }
         smartlight.color_temperature = fields[0].field_copy.int_value;
     } else {
-        printf("invalid action: %s\n", action_name);
+        wiced_log_printf("invalid action: %s\n", action_name);
         return KII_FALSE;
     }
 
     if (prv_set_smartlight_info(&smartlight) == KII_FALSE) {
-        printf("fail to unlock.\n");
+        wiced_log_printf("fail to unlock.\n");
         return KII_FALSE;
     }
     return KII_TRUE;
@@ -181,7 +198,7 @@ static kii_bool_t state_handler(
     prv_smartlight_t smartlight;
     memset(&smartlight, 0x00, sizeof(smartlight));
     if (prv_get_smartlight_info(&smartlight) == KII_FALSE) {
-        printf("fail to lock.\n");
+        wiced_log_printf("fail to lock.\n");
         return KII_FALSE;
     }
     if ((*writer)(kii, "{\"power\":") == KII_FALSE) {
@@ -225,7 +242,7 @@ static kii_bool_t custom_push_handler(
         size_t message_length)
 {
     kii_bool_t ret = KII_TRUE;
-    printf("custom_push_handler:\n%s\n", message);
+    wiced_log_printf("custom_push_handler:\n%s\n", message);
     if (strncmp(message, "{\"schema\"", 9) == 0) {
         ret = KII_FALSE;
     }
@@ -234,6 +251,13 @@ static kii_bool_t custom_push_handler(
         ret = KII_FALSE;
     }
     return ret;
+}
+
+static int wiced_log_output_handler(WICED_LOG_LEVEL_T level, char *logmsg)
+{
+    write(STDOUT_FILENO, logmsg, strlen(logmsg));
+
+    return 0;
 }
 
 static kii_thing_if_command_handler_resource_t command_handler_resource;
@@ -251,24 +275,24 @@ static int onboard_command ( int argc, char *argv[] ) {
     char *password = NULL;
 
     for (int i = 1; i < argc; ++i) {
-        if (strncmp(argv[i], "vendor-thing-id=", 16) == 0) {
-            vendorThingID = argv[i] + 16;
-        } else if (strncmp(argv[i], "thing-id=", 9) == 0) {
-            thingID = argv[i] + 9;
-        } else if (strncmp(argv[i], "password=", 9) == 0) {
-            password = argv[i] + 9;
+        if (strncmp(argv[i], "--vendor-thing-id=", 18) == 0) {
+            vendorThingID = argv[i] + 18;
+        } else if (strncmp(argv[i], "--thing-id=", 11) == 0) {
+            thingID = argv[i] + 11;
+        } else if (strncmp(argv[i], "--password=", 11) == 0) {
+            password = argv[i] + 11;
         }
     }
     if (vendorThingID == NULL && thingID == NULL) {
-        printf("neither vendor-thing-id and thing-id are specified.\n");
+        wiced_log_printf("neither vendor-thing-id and thing-id are specified.\n");
         return ERR_CMD_OK;
     }
     if (password == NULL) {
-        printf("password is not specified.\n");
+        wiced_log_printf("password is not specified.\n");
         return ERR_CMD_OK;
     }
     if (vendorThingID != NULL && thingID != NULL) {
-        printf("both vendor-thing-id and thing-id is specified.  either of one should be specified.\n");
+        wiced_log_printf("both vendor-thing-id and thing-id is specified.  either of one should be specified.\n");
         return ERR_CMD_OK;
     }
     if (vendorThingID != NULL) {
@@ -279,14 +303,21 @@ static int onboard_command ( int argc, char *argv[] ) {
                 password);
     }
     if (result == KII_FALSE) {
-        printf("failed to onboard.\n");
+        wiced_log_printf("failed to onboard.\n");
     } else {
-        printf("onboard succeed.\n");
+        wiced_log_printf("onboard succeed.\n");
     }
+#ifdef DEBUG
+    while(1) {
+        wiced_rtos_delay_milliseconds(10000);
+    }
+#endif
     return ERR_CMD_OK;
 }
 
+#ifndef MAX_LINE_LENGTH
 #define MAX_LINE_LENGTH  (256)
+#endif
 #define MAX_HISTORY_LENGTH (20)
 
 static char line_buffer[MAX_LINE_LENGTH];
@@ -295,7 +326,7 @@ static char history_buffer_storage[MAX_LINE_LENGTH * MAX_HISTORY_LENGTH];
 static const command_t commands[] =
 {
     //ALL_COMMANDS
-    {"onboard", onboard_command, 2, NULL, NULL, "[vendor-thing-id/thing-id]=* passwod=*", ""},
+    {"onboard", onboard_command, 2, NULL, NULL, "[--vendor-thing-id/--thing-id]=* --passwod=*", ""},
     CMD_TABLE_END
 };
 
@@ -322,14 +353,15 @@ void application_start( void )
     state_updater_resource.period = EX_STATE_UPDATE_PERIOD;
     state_updater_resource.state_handler = state_handler;
 
-    wiced_rtos_init_mutex(&m_mutex);
-
     ret = wiced_init();
     if ( ret != WICED_SUCCESS )
     {
-        WPRINT_APP_INFO( ( "wiced_init failed.\n\n" ) );
+        printf("wiced_init failed.\n\n");
         return;
     }
+
+    wiced_rtos_init_mutex(&m_mutex);
+    wiced_log_init(WICED_LOG_PRINTF, wiced_log_output_handler, NULL);
 
     /* Disable roaming to other access points */
     wiced_wifi_set_roam_trigger( -99 ); /* -99dBm ie. extremely low signal level */
@@ -338,7 +370,7 @@ void application_start( void )
     ret = wiced_network_up( WICED_STA_INTERFACE, WICED_USE_EXTERNAL_DHCP_SERVER, NULL );
     if ( ret != WICED_SUCCESS )
     {
-        WPRINT_APP_INFO( ( "\nNot able to join the requested AP\n\n" ) );
+        wiced_log_printf("\nNot able to join the requested AP\n\n");
         return;
     }
 
@@ -346,7 +378,13 @@ void application_start( void )
             &command_handler_resource, &state_updater_resource, NULL) == KII_FALSE) {
         WPRINT_APP_ERROR( ( "kii init failed.\n" ) );
     } else {
-        WPRINT_APP_INFO( ( "kii init succeed.\n" ) );
+#ifndef KII_JSON_FIXED_TOKEN_NUM
+        kii_thing_if.command_handler.kii_json_resource.tokens = kii_json_tokens;
+        kii_thing_if.command_handler.kii_json_resource.tokens_num = KII_JSON_TOKENS_NUM;
+        kii_thing_if.state_updater.kii_json_resource.tokens = kii_json_tokens;
+        kii_thing_if.state_updater.kii_json_resource.tokens_num = KII_JSON_TOKENS_NUM;
+#endif
+        wiced_log_printf("kii init succeed.\n");
     }
 
     /* Run the main application function */

@@ -3,17 +3,11 @@
 #==============================================================================
 # Global defines
 #==============================================================================
-GLOBAL_DEFINES += STDIO_BUFFER_SIZE=128 \
-                  TX_PACKET_POOL_SIZE=14 \
-                  RX_PACKET_POOL_SIZE=12 \
-                  WICED_TCP_TX_DEPTH_QUEUE=10 \
-                  TCP_WINDOW_SIZE=131072
-GLOBAL_DEFINES += CONSOLE_ENABLE_THREADS
+GLOBAL_DEFINES += STDIO_BUFFER_SIZE=128
 
 NAME := App_thing_if_demo
 
-$(NAME)_DEFINES += KII_PUSH_KEEP_ALIVE_INTERVAL_SECONDS=300 \
-                   KII_JSON_FIXED_TOKEN_NUM=256
+$(NAME)_DEFINES += KII_PUSH_KEEP_ALIVE_INTERVAL_SECONDS=60
 
 $(NAME)_SOURCES := ./thing_if_demo.c \
                    ./kii_thing_if_environment_impl.c \
@@ -37,6 +31,7 @@ $(NAME)_INCLUDES := ./thing-if-ThingSDK/ \
                     ./thing-if-ThingSDK/kii/kii_json/include
 
 $(NAME)_COMPONENTS := protocols/MQTT \
+                      utilities/wiced_log \
                       utilities/command_console \
                       utilities/command_console/wps \
                       utilities/command_console/wifi \

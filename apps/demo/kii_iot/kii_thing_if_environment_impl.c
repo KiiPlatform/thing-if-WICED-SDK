@@ -7,6 +7,7 @@
 #include "kii_thing_if.h"
 
 #include "wiced.h"
+#include "wiced_log.h"
 
 typedef struct _socket_context {
     wiced_tcp_socket_t socket;
@@ -145,7 +146,7 @@ kii_socket_code_t mqtt_connect_cb_impl(
         return KII_SOCKETC_FAIL;
     }
     wiced_tls_init_context(&(context->tls_context), NULL, NULL);
-    //wiced_tcp_enable_tls(&(context->socket), &(context->tls_context));
+    wiced_tcp_enable_tls(&(context->socket), &(context->tls_context));
     context->packet = NULL;
     context->packet_offset = 0;
 
@@ -153,7 +154,8 @@ kii_socket_code_t mqtt_connect_cb_impl(
     wiced_tcp_enable_keepalive(&(context->socket), 0, 0, KII_PUSH_KEEP_ALIVE_INTERVAL_SECONDS * 2);
 #endif
 
-    rc = wiced_tcp_connect(&(context->socket), &addr, port, 10000);
+    // TODO: We need to use port_ssl(now, 8883), but port is same as port_tcp.
+    rc = wiced_tcp_connect(&(context->socket), &addr, 8883, 10000);
     if (rc != WICED_SUCCESS) {
         wiced_tcp_disconnect(&(context->socket));
         wiced_tcp_delete_socket(&(context->socket));
@@ -238,44 +240,48 @@ kii_socket_code_t mqtt_close_cb_impl(kii_socket_context_t* socket_context)
 }
 
 typedef struct {
-	KII_TASK_ENTRY entry;
-	void* param;
+    wiced_thread_t thread;
+    KII_TASK_ENTRY entry;
+    void* param;
 } task_thread_arg_t;
 
-static void task_thread_function( wiced_thread_arg_t arg ) {
+void task_thread_function( wiced_thread_arg_t arg ) {
     task_thread_arg_t* task_arg = (task_thread_arg_t*)arg;
-    KII_TASK_ENTRY entry = task_arg->entry;
-    void* param = task_arg->param;
-    free(task_arg);
 
-    entry(param);
+    task_arg->entry(task_arg->param);
 }
+
+static task_thread_arg_t status_update_thread_arg;
+static task_thread_arg_t recv_msg_thread_arg;
+static task_thread_arg_t ping_req_thread_arg;
 
 kii_task_code_t task_create_cb_impl(
         const char* name,
         KII_TASK_ENTRY entry,
         void* param)
 {
-    unsigned int stk_size = 0;
+    unsigned int stk_size = WICED_DEFAULT_APPLICATION_STACK_SIZE;
     unsigned int priority = RTOS_DEFAULT_THREAD_PRIORITY;
+    task_thread_arg_t *task_arg = NULL;
 
     if (strcmp(name, KII_THING_IF_TASK_NAME_STATUS_UPDATE) == 0) {
-        stk_size = 2048;
-        priority = RTOS_LOWER_PRIORTIY_THAN(priority);
+        task_arg = &status_update_thread_arg;
     } else if (strcmp(name, KII_TASK_NAME_RECV_MSG) == 0) {
-        stk_size = 4096;
+        task_arg = &recv_msg_thread_arg;
 #ifdef KII_PUSH_KEEP_ALIVE_INTERVAL_SECONDS
     } else if (strcmp(name, KII_TASK_NAME_PING_REQ) == 0) {
-        stk_size = 1024;
+        priority = RTOS_LOWER_PRIORTIY_THAN(RTOS_DEFAULT_THREAD_PRIORITY);
+        task_arg = &ping_req_thread_arg;
 #endif
+    } else {
+        wiced_log_printf("unknown task name: %s\n", name);
+        return KII_TASKC_FAIL;
     }
 
-    task_thread_arg_t *task_arg = (task_thread_arg_t*)malloc(sizeof(task_thread_arg_t));
     task_arg->entry = entry;
     task_arg->param = param;
-    wiced_thread_t thread;
-    if (wiced_rtos_create_thread(&thread, priority, name, task_thread_function, stk_size, task_arg) != WICED_SUCCESS) {
-    	free(task_arg);
+    if (wiced_rtos_create_thread(&(task_arg->thread), priority, name, task_thread_function, stk_size, task_arg) != WICED_SUCCESS) {
+        wiced_log_printf("create thread [%s] failed.\n", name);
         return KII_TASKC_FAIL;
     } else {
         return KII_TASKC_OK;
@@ -291,7 +297,7 @@ void logger_cb_impl(const char* format, ...)
 {
     va_list list;
     va_start(list, format);
-    vprintf(format, list);
+    wiced_log_vprintf(format, list);
     va_end(list);
 }
 
