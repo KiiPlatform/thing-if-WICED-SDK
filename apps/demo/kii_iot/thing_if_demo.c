@@ -31,10 +31,6 @@ typedef struct prv_smartlight_t {
 
 static prv_smartlight_t m_smartlight;
 static wiced_mutex_t m_mutex;
-#ifndef KII_JSON_FIXED_TOKEN_NUM
-#define KII_JSON_TOKENS_NUM 64
-static kii_json_token_t kii_json_tokens[KII_JSON_TOKENS_NUM];
-#endif
 
 static kii_json_parse_result_t prv_json_read_object(
         const char* json,
@@ -43,18 +39,9 @@ static kii_json_parse_result_t prv_json_read_object(
         char error[EMESSAGE_SIZE + 1])
 {
     kii_json_t kii_json;
-#ifndef KII_JSON_FIXED_TOKEN_NUM
-    kii_json_resource_t resource;
-#endif
 
     memset(&kii_json, 0, sizeof(kii_json));
-#ifndef KII_JSON_FIXED_TOKEN_NUM
-    resource.tokens = kii_json_tokens;
-    resource.tokens_num = KII_JSON_TOKENS_NUM;
-    kii_json.resource = &resource;
-#else
     kii_json.resource = NULL;
-#endif
     kii_json.error_string_buff = error;
     kii_json.error_string_length = EMESSAGE_SIZE + 1;
 
@@ -295,6 +282,15 @@ static int onboard_command ( int argc, char *argv[] ) {
         wiced_log_printf("both vendor-thing-id and thing-id is specified.  either of one should be specified.\n");
         return ERR_CMD_OK;
     }
+
+    if (init_kii_thing_if(&kii_thing_if, EX_APP_ID, EX_APP_KEY, EX_APP_SITE,
+            &command_handler_resource, &state_updater_resource, NULL) == KII_FALSE) {
+        wiced_log_printf("kii init failed.\n");
+        return ERR_CMD_OK;
+    } else {
+        wiced_log_printf("kii init succeed.\n");
+    }
+
     if (vendorThingID != NULL) {
         result = onboard_with_vendor_thing_id(&kii_thing_if, vendorThingID,
                 password, NULL, NULL);
@@ -304,6 +300,7 @@ static int onboard_command ( int argc, char *argv[] ) {
     }
     if (result == KII_FALSE) {
         wiced_log_printf("failed to onboard.\n");
+        return ERR_CMD_OK;
     } else {
         wiced_log_printf("onboard succeed.\n");
     }
@@ -315,10 +312,41 @@ static int onboard_command ( int argc, char *argv[] ) {
     return ERR_CMD_OK;
 }
 
-#ifndef MAX_LINE_LENGTH
-#define MAX_LINE_LENGTH  (256)
+static int onboard_with_token_command ( int argc, char *argv[] ) {
+    char *thingID = NULL;
+    char *accessToken = NULL;
+
+    for (int i = 1; i < argc; ++i) {
+        if (strncmp(argv[i], "--thing-id=", 11) == 0) {
+            thingID = argv[i] + 11;
+        } else if (strncmp(argv[i], "--access-token=", 15) == 0) {
+            accessToken = argv[i] + 15;
+        }
+    }
+    if (thingID == NULL) {
+        wiced_log_printf("thing-id is not specified.\n");
+        return ERR_CMD_OK;
+    }
+    if (accessToken == NULL) {
+        wiced_log_printf("access-token is not specified.\n");
+        return ERR_CMD_OK;
+    }
+
+    if (init_kii_thing_if_with_onboarded_thing(&kii_thing_if,
+            EX_APP_ID, EX_APP_KEY, EX_APP_SITE, thingID, accessToken,
+            &command_handler_resource, &state_updater_resource, NULL) == KII_FALSE) {
+        wiced_log_printf("failed to onboard with token.\n");
+        return ERR_CMD_OK;
+    } else {
+        wiced_log_printf("onboard succeed.\n");
+    }
+#ifdef DEBUG
+    while(1) {
+        wiced_rtos_delay_milliseconds(10000);
+    }
 #endif
-#define MAX_HISTORY_LENGTH (20)
+    return ERR_CMD_OK;
+}
 
 static char line_buffer[MAX_LINE_LENGTH];
 static char history_buffer_storage[MAX_LINE_LENGTH * MAX_HISTORY_LENGTH];
@@ -327,6 +355,7 @@ static const command_t commands[] =
 {
     //ALL_COMMANDS
     {"onboard", onboard_command, 2, NULL, NULL, "[--vendor-thing-id/--thing-id]=* --passwod=*", ""},
+    {"onboard-token", onboard_with_token_command, 2, NULL, NULL, "--thing-id=* --access-token=*", ""},
     CMD_TABLE_END
 };
 
@@ -372,19 +401,6 @@ void application_start( void )
     {
         wiced_log_printf("\nNot able to join the requested AP\n\n");
         return;
-    }
-
-    if (init_kii_thing_if(&kii_thing_if, EX_APP_ID, EX_APP_KEY, EX_APP_SITE,
-            &command_handler_resource, &state_updater_resource, NULL) == KII_FALSE) {
-        WPRINT_APP_ERROR( ( "kii init failed.\n" ) );
-    } else {
-#ifndef KII_JSON_FIXED_TOKEN_NUM
-        kii_thing_if.command_handler.kii_json_resource.tokens = kii_json_tokens;
-        kii_thing_if.command_handler.kii_json_resource.tokens_num = KII_JSON_TOKENS_NUM;
-        kii_thing_if.state_updater.kii_json_resource.tokens = kii_json_tokens;
-        kii_thing_if.state_updater.kii_json_resource.tokens_num = KII_JSON_TOKENS_NUM;
-#endif
-        wiced_log_printf("kii init succeed.\n");
     }
 
     /* Run the main application function */

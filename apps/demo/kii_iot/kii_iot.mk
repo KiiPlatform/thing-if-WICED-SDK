@@ -7,7 +7,8 @@ GLOBAL_DEFINES += STDIO_BUFFER_SIZE=128
 
 NAME := App_thing_if_demo
 
-$(NAME)_DEFINES += KII_PUSH_KEEP_ALIVE_INTERVAL_SECONDS=60
+$(NAME)_DEFINES += KII_PUSH_KEEP_ALIVE_INTERVAL_SECONDS=60 \
+                   KII_JSON_FIXED_TOKEN_NUM=64
 
 $(NAME)_SOURCES := ./thing_if_demo.c \
                    ./kii_thing_if_environment_impl.c \
