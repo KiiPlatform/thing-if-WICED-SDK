@@ -8,6 +8,7 @@
 
 #include "wiced.h"
 #include "wiced_log.h"
+#include "wiced_tls.h"
 
 typedef struct _socket_context {
     wiced_tcp_socket_t socket;
@@ -23,6 +24,7 @@ kii_socket_code_t socket_connect_cb_impl(
 {
     app_socket_context_t *context;
     wiced_ip_address_t addr;
+    wiced_tls_identity_t* identity = NULL;
     wiced_result_t rc;
 
     rc = wiced_hostname_lookup(host, &addr, 10000);
@@ -37,7 +39,7 @@ kii_socket_code_t socket_connect_cb_impl(
         free(context);
         return KII_SOCKETC_FAIL;
     }
-    wiced_tls_init_context(&(context->tls_context), NULL, NULL);
+    wiced_tls_init_context(&(context->tls_context), identity, NULL);
     wiced_tcp_enable_tls(&(context->socket), &(context->tls_context));
     context->packet = NULL;
     context->packet_offset = 0;
@@ -131,6 +133,7 @@ kii_socket_code_t mqtt_connect_cb_impl(
 {
     app_socket_context_t *context;
     wiced_ip_address_t addr;
+    wiced_tls_identity_t* identity = NULL;
     wiced_result_t rc;
 
     rc = wiced_hostname_lookup(host, &addr, 10000);
@@ -145,7 +148,7 @@ kii_socket_code_t mqtt_connect_cb_impl(
         free(context);
         return KII_SOCKETC_FAIL;
     }
-    wiced_tls_init_context(&(context->tls_context), NULL, NULL);
+    wiced_tls_init_context(&(context->tls_context), identity, NULL);
     wiced_tcp_enable_tls(&(context->socket), &(context->tls_context));
     context->packet = NULL;
     context->packet_offset = 0;
