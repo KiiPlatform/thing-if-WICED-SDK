@@ -14,7 +14,9 @@ Please download and put to WICED/WICED-Studio-[version]/43xxx\_Wi-Fi/platforms.
 
 ## How to use
 1. Connect Avnet BCM4343W Iot Starter Kit to your PC, and open terminal application. Reference: [Creating an AWS WICED IoT solution](https://community.cypress.com/docs/DOC-2623).
+1. Clone this repository and update all submodules, "git submodule update --init --recursive".
 1. Copy apps folder to WICED/WICED-Studio-[version]/43xxx\_Wi-Fi/.
+1. Change wifi configuration "CLIENT\_AP\_\*" in apps/demo/kii\_iot/wifi\_config\_dct.h.
 1. On WICED Studio, add make target "demo.kii\_iot-BCM94343W\_AVN download\_apps download run" into 43xxx\_Wifi.
 1. Run make target.
-1. On Terminal, type "onboard [vendor-thing-id/thing-id]={id} password={password}"
+1. On Terminal, type "onboard [vendor-thing-id/thing-id]={id} password={password}". If you know thing id and access token, you can use "onboard-token --thing-id={id} --access-token={token}".
