@@ -1,0 +1,3 @@
+[submodule "apps/demo/kii_iot/thing-if-ThingSDK"]
+	path = apps/demo/kii_iot/thing-if-ThingSDK
+	url = git@github.com:KiiPlatform/thing-if-ThingSDK.git
