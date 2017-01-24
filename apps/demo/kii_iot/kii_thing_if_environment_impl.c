@@ -157,8 +157,7 @@ kii_socket_code_t mqtt_connect_cb_impl(
     wiced_tcp_enable_keepalive(&(context->socket), 0, 0, KII_PUSH_KEEP_ALIVE_INTERVAL_SECONDS * 2);
 #endif
 
-    // TODO: We need to use port_ssl(now, 8883), but port is same as port_tcp.
-    rc = wiced_tcp_connect(&(context->socket), &addr, 8883, 10000);
+    rc = wiced_tcp_connect(&(context->socket), &addr, port, 10000);
     if (rc != WICED_SUCCESS) {
         wiced_tcp_disconnect(&(context->socket));
         wiced_tcp_delete_socket(&(context->socket));
