@@ -3,6 +3,12 @@
 Kii thing-if is a cloud based IoT solution platform.
 In this demo, we'll show how to run Kii thing-if application on the WICED.
 
+The goal is to demonstrate how essential features listed bellow works.
+
+1. Onboarding
+2. Send Command to the device and handle it
+3. State reporting from the device and confirm it on the web console.
+
 Please refer to the [articile](http://docs.kii.com/en/guides/thingifsdk/)
 for the details of thing-if.
 
