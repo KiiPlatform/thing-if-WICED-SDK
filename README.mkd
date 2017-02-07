@@ -39,12 +39,12 @@ Please refer to the [guide](http://docs.kii.com/en/guides/devportal/application_
   * Make target: demo.kii\_iot-BCM94343W\_AVN download run
 Then click "OK"
 
-[!Creation dialog](https://www.evernote.com/l/AFLKzrdKzStCn7kk-LjaYOT8TbUQcDJ-4Y0B/image.png)
+![Creation dialog](https://www.evernote.com/l/AFLKzrdKzStCn7kk-LjaYOT8TbUQcDJ-4Y0B/image.png)
 
 * Run make target.
 Show make target view and double click 'kii' created on last step.
 
-[!Make target](https://www.evernote.com/l/AFLQ44OANLFP3pY87ilLng5iHb8v3TzL8rQB/image.png)
+![Make target](https://www.evernote.com/l/AFLQ44OANLFP3pY87ilLng5iHb8v3TzL8rQB/image.png)
 
 Now, the application has been installed on the board and waiting for your
 operation!
