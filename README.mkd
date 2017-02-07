@@ -34,9 +34,11 @@ Please refer to the [guide](http://docs.kii.com/en/guides/devportal/application_
 
 * On WICED Studio, choose "Project" > "Make Target" > "Create...".
 * In the target creation dialog put following texts.
-  * Target name: kii (You can choose arbitrary name)
+  * Target name: "kii" (You can choose arbitrary name)
   * Same as the target name: unchecked
-  * Make target: demo.kii\_iot-BCM94343W\_AVN download run
+  * Make target: "demo.kii\_iot-BCM94343W\_AVN download run"
+
+
 Then click "OK"
 
 ![Creation dialog](https://www.evernote.com/l/AFLKzrdKzStCn7kk-LjaYOT8TbUQcDJ-4Y0B/image.png)
