@@ -1,23 +1,54 @@
-# Kii thing-if SDK for WICED SDK
-This is kii thing-if SDK porting to WICED SDK, based on Avnet BCM4343W IoT Starter Kit.
+# Kii thing-if with WICED
 
-## Requires
+Kii thing-if is a cloud based IoT solution platform.
+In this demo, we'll show how to run Kii thing-if application on the WICED.
+
+Please refer to the [articile](http://docs.kii.com/en/guides/thingifsdk/)
+for the details of thing-if.
+
+## Reference hardware
+Avnet BCM4343W IoT Starter Kit (AES-EVB-BCM4343W-G)
+
+## Prerequisite 
 
 * [WICED Studio](https://community.cypress.com/community/wiced-wifi/wiced-wifi-documentation)
 
-This is IDE and SDK for WICED.
-
 * [BCM94343W\_AVN](https://github.com/CloudConnectKits/WICED-SDK-3.5.2_Platform_Files)
-
 If you use Avnet BCM4343W Iot Starter Kit, this is necessary.
-Please download and put to WICED/WICED-Studio-[version]/43xxx\_Wi-Fi/platforms.
+Please download and copy it to WICED/WICED-Studio-[version]/43xxx\_Wi-Fi/platforms.
 
-## How to use
-1. Connect Avnet BCM4343W Iot Starter Kit to your PC, and open terminal application. Reference: [Creating an AWS WICED IoT solution](https://community.cypress.com/docs/DOC-2623).
-1. Clone this repository and update all submodules, "git submodule update --init --recursive".
-1. Copy apps folder to WICED/WICED-Studio-[version]/43xxx\_Wi-Fi/.
-1. Change wifi configuration "CLIENT\_AP\_\*" in apps/demo/kii\_iot/wifi\_config\_dct.h.
-1. Change application setting "EX\_APP\_\*" in apps/demo/kii\_iot/thing\_if\_demo.c.
-1. On WICED Studio, add make target "demo.kii\_iot-BCM94343W\_AVN download\_apps download run" into 43xxx\_Wifi.
-1. Run make target.
+* Configure terminal application
+Please refer to the [guide](https://community.cypress.com/servlet/JiveServlet/downloadBody/2623-102-3-2828/WICED-UM200-R.pdf)
+describes how to configure terminal application to connect the board.
+
+* Create Kii Cloud application
+Go to [Developer console](https://developer.kii.com) and create your application on Kii Cloud.
+
+## Installation
+* Clone this repository and update all submodules, "git submodule update --init --recursive".
+* Copy apps folder to WICED/WICED-Studio-[version]/43xxx\_Wi-Fi/.
+* Change wifi configuration "CLIENT\_AP\_\*" in apps/demo/kii\_iot/wifi\_config\_dct.h.
+* Change application setting "EX\_APP\_\*" in apps/demo/kii\_iot/thing\_if\_demo.c.
+Your Kii Cloud app id, key and site can be confirmed at developer console.
+Please refer to the [guide](http://docs.kii.com/en/guides/devportal/application_console/#configuring-the-application).
+
+* On WICED Studio, choose "Project" > "Make Target" > "Create...".
+* In the target creation dialog put following texts.
+  * Target name: kii (You can choose arbitrary name)
+  * Same as the target name: unchecked
+  * Make target: demo.kii\_iot-BCM94343W\_AVN download run
+Then click "OK"
+
+[!Creation dialog](https://www.evernote.com/l/AFLKzrdKzStCn7kk-LjaYOT8TbUQcDJ-4Y0B/image.png)
+
+* Run make target.
+Show make target view and double click 'kii' created on last step.
+
+[!Make target](https://www.evernote.com/l/AFLQ44OANLFP3pY87ilLng5iHb8v3TzL8rQB/image.png)
+
+Now, the application has been installed on the board and waiting for your
+operation!
+
+## Run
+
 1. On Terminal, type "onboard [vendor-thing-id/thing-id]={id} password={password}". If you know thing id and access token, you can use "onboard-token --thing-id={id} --access-token={token}".
