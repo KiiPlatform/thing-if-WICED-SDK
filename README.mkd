@@ -145,8 +145,8 @@ On the Thing-IF Console, You can check the command status.
 
 ![Thing-IF Console](https://www.evernote.com/l/AFKUVASKTyxB26iqtgvNVkY6DETgaTY9NMIB/image.png)
 
-### 4. State report
-In this demo, application report the device state when the received command and successfully handle it.
+### 4. State reporting
+In this demo, application reports the device state when received a command and successfully handle it.
 
 Click 'State' tab on the Thing-IF Console.
 ![Thing-IF Console](https://www.evernote.com/l/AFJ6c3KB5S1NyJ8MdoK3FFgBRG1Zr-xJRHwB/image.png)
@@ -170,7 +170,7 @@ Please create new Command. The steps are same as described in Step 3. This time 
 }
 ```
 
-After command is sent to device, application reports the state change and you'll see the 'brightness' field is updated.
+After the command is sent to device, application reports the state change and you'll see the 'brightness' field is updated.
 
 ![Thing-IF Console](https://www.evernote.com/l/AFJ4qJLfEyJAK5rindzAIv1XfPF1oZ1up5IB/image.png)
 
