@@ -17,12 +17,14 @@ Avnet BCM4343W IoT Starter Kit (AES-EVB-BCM4343W-G)
 If you use Avnet BCM4343W Iot Starter Kit, this is necessary.
 Please download and copy it to WICED/WICED-Studio-[version]/43xxx\_Wi-Fi/platforms.
 
-* Configure terminal application
-Please refer to the [guide](https://community.cypress.com/servlet/JiveServlet/downloadBody/2623-102-3-2828/WICED-UM200-R.pdf)
+* Configure terminal application.
+
+  Please refer to the [guide](https://community.cypress.com/servlet/JiveServlet/downloadBody/2623-102-3-2828/WICED-UM200-R.pdf)
 describes how to configure terminal application to connect the board.
 
-* Create Kii Cloud application
-Go to [Developer console](https://developer.kii.com) and create your application on Kii Cloud.
+* Create Kii Cloud application.
+
+  Go to [Developer console](https://developer.kii.com) and create your application on Kii Cloud.
 
 ## Installation
 * Clone this repository and update all submodules, "git submodule update --init --recursive".
