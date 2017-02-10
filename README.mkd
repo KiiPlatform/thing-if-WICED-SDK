@@ -1,23 +1,221 @@
-# Kii thing-if SDK for WICED SDK
-This is kii thing-if SDK porting to WICED SDK, based on Avnet BCM4343W IoT Starter Kit.
+# Kii thing-if with WICED
 
-## Requires
+Kii thing-if is a cloud based IoT solution platform.
+In this demo, we'll show how to run Kii thing-if application on the WICED.
+
+The goal is to demonstrate how essential features listed bellow works.
+
+1. Onboarding
+2. Send Command to the device and handle it
+3. State reporting from the device and confirm it on the web console.
+
+Please refer to the [articile](http://docs.kii.com/en/guides/thingifsdk/)
+for the details of thing-if.
+
+## Reference hardware
+Avnet BCM4343W IoT Starter Kit (AES-EVB-BCM4343W-G)
+
+## Prerequisite 
 
 * [WICED Studio](https://community.cypress.com/community/wiced-wifi/wiced-wifi-documentation)
 
-This is IDE and SDK for WICED.
-
 * [BCM94343W\_AVN](https://github.com/CloudConnectKits/WICED-SDK-3.5.2_Platform_Files)
-
 If you use Avnet BCM4343W Iot Starter Kit, this is necessary.
-Please download and put to WICED/WICED-Studio-[version]/43xxx\_Wi-Fi/platforms.
+Please download and copy it to WICED/WICED-Studio-[version]/43xxx\_Wi-Fi/platforms.
 
-## How to use
-1. Connect Avnet BCM4343W Iot Starter Kit to your PC, and open terminal application. Reference: [Creating an AWS WICED IoT solution](https://community.cypress.com/docs/DOC-2623).
-1. Clone this repository and update all submodules, "git submodule update --init --recursive".
-1. Copy apps folder to WICED/WICED-Studio-[version]/43xxx\_Wi-Fi/.
-1. Change wifi configuration "CLIENT\_AP\_\*" in apps/demo/kii\_iot/wifi\_config\_dct.h.
-1. Change application setting "EX\_APP\_\*" in apps/demo/kii\_iot/thing\_if\_demo.c.
-1. On WICED Studio, add make target "demo.kii\_iot-BCM94343W\_AVN download\_apps download run" into 43xxx\_Wifi.
-1. Run make target.
-1. On Terminal, type "onboard [vendor-thing-id/thing-id]={id} password={password}". If you know thing id and access token, you can use "onboard-token --thing-id={id} --access-token={token}".
+* Configure terminal application.
+
+  Please refer to the [guide](https://community.cypress.com/servlet/JiveServlet/downloadBody/2623-102-3-2828/WICED-UM200-R.pdf)
+describes how to configure terminal application to connect the board.
+
+* Create Kii Cloud application.
+
+  Go to [Developer console](https://developer.kii.com) and create your application on Kii Cloud.
+
+## Installation
+* Clone this repository and update all submodules, "git submodule update --init --recursive".
+* Copy apps folder to WICED/WICED-Studio-[version]/43xxx\_Wi-Fi/.
+* Change wifi configuration "CLIENT\_AP\_\*" in apps/demo/kii\_iot/wifi\_config\_dct.h.
+* Change application setting "EX\_APP\_\*" in apps/demo/kii\_iot/thing\_if\_demo.c.
+Your Kii Cloud app id, key and site can be confirmed at developer console.
+Please refer to the [guide](http://docs.kii.com/en/guides/devportal/application_console/#configuring-the-application).
+
+* On WICED Studio, choose "Project" > "Make Target" > "Create...".
+* In the target creation dialog put following texts.
+  * Target name: "kii" (You can choose arbitrary name)
+  * Same as the target name: unchecked
+  * Make target: "demo.kii\_iot-BCM94343W\_AVN download run"
+
+
+Then click "OK"
+
+![Creation dialog](https://www.evernote.com/l/AFLKzrdKzStCn7kk-LjaYOT8TbUQcDJ-4Y0B/image.png)
+
+* Run make target.
+Show make target view and double click 'kii' created on last step.
+
+![Make target](https://www.evernote.com/l/AFLQ44OANLFP3pY87ilLng5iHb8v3TzL8rQB/image.png)
+
+Now, the application has been installed on the board and waiting for your
+operation!
+
+## Run application
+
+### 1. Thing onboarding
+On the terminal application connected to the board, execute following command.
+
+```shell
+onboard --vendor-thing-id=wiced-kii-app --password=wicedkii
+```
+
+Successfull message.
+```shell
+kii init succeed.
+onboard succeed.
+```
+
+The onboard command induces
+* Creates the thing entry in Kii thing-if cloud.
+* Establish connection to thing-if MQTT and waiting for command.
+* Start uploading state to thing-if cloud.
+
+### 2. User onboarding
+
+#### 2.1. Register user
+Go to developer console and create a user who is going to be a owner of the
+thing.
+
+[How to create a user](http://docs.kii.com/en/guides/devportal/data_browsing/user-console/#adding)
+
+In this demo, specify Login Name and password is fine and you can let other
+columns left blank.
+
+#### 2.2. User onboarding
+On the developer portal, Go to Thing-IF Console.
+![Thing-IF Console](https://www.evernote.com/l/AFLgAJz3KUpMp4yBJjkm3bn9TfqFOhvNiQAB/image.png)
+
+Choose the row which vendorThingID is 'wiced-kii-app'.
+(The ID is specified in onboarding command in Step 1.)
+
+Click 'Onboard' tab and input user's login name and thing password.
+(The thing password is specified in onboarding command in Step 1.)
+![Thing-IF Console](https://www.evernote.com/l/AFJXn2FokIRLDJU23e7nIEPXSyfe7RK1FXEB/image.png)
+
+Click 'Onboard' bottun on the bottom right.
+
+You'll see the successful message!
+
+### 3 Send command to the board.
+On the Thing-IF Console, Chose 'Command' tab and click
+'+ New command' button.
+
+Fill the issuer. Console would list the owner of the thing automatically and you may have only one owner at
+this point.
+
+![Thing-IF Console](https://www.evernote.com/l/AFKGancqcRlGYI5QlKTiZT1sgX_3NB0Mm9EB/image.png)
+
+Then, edit the json body like this.
+Note that don't change the "issuer" field since it is automatically filled by the console.
+
+```json
+{
+  "actions": [
+    {
+      "turnPower" : {"power":true}
+    }
+  ],
+  "issuer": "user:c4619da00022-5aa8-6e11-c1ce-07d638a3",
+  "schema": "SmartLight-Demo",
+  "schemaVersion": 1
+}
+```
+
+Click 'Send' button.
+
+On the terminal app, You'll see the log like this.
+
+```
+> custom_push_handler:
+{"schema":"SmartLight-Demo","schemaVersion":1,"commandID":"5b017900-ed18-11e6-9cfd-22000b07265b","actions":[{"turnPower":{"power":true}}],"issuer":"user:c4619da00022-5aa8-6e11-c1ce-07d638a3"}
+schema=SmartLight-Demo, schema_version=1, action name=turnPower, action params={"power":true}
+```
+
+#### What happend?
+When the demo application received command,
+It validates the format of the command and change the internal state called 'power' to true.
+And then send back the command execution result to
+thing-if cloud.
+thing-if cloud then changed the command status to 'DONE'
+
+On the Thing-IF Console, You can check the command status.
+
+![Thing-IF Console](https://www.evernote.com/l/AFKUVASKTyxB26iqtgvNVkY6DETgaTY9NMIB/image.png)
+
+### 4. State reporting
+In this demo, application reports the device state when received a command and successfully handle it.
+
+Click 'State' tab on the Thing-IF Console.
+![Thing-IF Console](https://www.evernote.com/l/AFJ6c3KB5S1NyJ8MdoK3FFgBRG1Zr-xJRHwB/image.png)
+
+This demo application manages "brightness", "color", "power" and "colorTemperature" fields as state.
+
+Let's send another command and see if the application propery update the state.
+
+Please create new Command. The steps are same as described in Step 3. This time we'll change the "brightness" field instead of "power".
+
+```json
+{
+  "actions": [
+    {
+      "setBrightness" : {"brightness" : 50}
+    }
+  ],
+  "issuer": "user:c4619da00022-5aa8-6e11-c1ce-07d638a3",
+  "schema": "SmartLight-Demo",
+  "schemaVersion": 1
+}
+```
+
+After the command is sent to device, application reports the state change and you'll see the 'brightness' field is updated.
+
+![Thing-IF Console](https://www.evernote.com/l/AFJ4qJLfEyJAK5rindzAIv1XfPF1oZ1up5IB/image.png)
+
+## Make your own application
+Hooray! We have completed the steps of Onboarding, Owner Onboarding, Send Command and reporting State.
+Those are essential functionarilties in thing-if.
+
+To make your own application, you will define Command and State that suit your device.
+
+For example, if your device is air conditioner,
+Command will have the action `"setPresetTemperature" : 25`
+and State will have the field `"currentTemperature" : 20`.
+
+It depends on your application running on the board how to
+handle the specific action and what state would be reported.
+
+To see how to change the command handling, please refer to
+[action\_handler](https://github.com/KiiPlatform/thing-if-WICED-SDK/blob/97d18ee155e6b486c30fad88c356ee8d6043e8c9/apps/demo/kii_iot/thing_if_demo.c#L85) implementation.
+
+This function is called when the device received command from the
+thing-if cloud.
+
+
+To see how to change status reporting, please refer to
+[state\_handler](https://github.com/KiiPlatform/thing-if-WICED-SDK/blob/97d18ee155e6b486c30fad88c356ee8d6043e8c9/apps/demo/kii_iot/thing_if_demo.c#L180) implementation.
+
+This function is periodically called from thing-if SDK.
+So that you can report update.
+
+## What's next?
+
+### Leverage Trigger
+
+Another feature which is not covered in this demo is called 'Trigger'.
+By defining 'Trigger', you can send Commands to the device in a specific condition or schedule.
+
+Please refer to [Trigger Documentation](http://docs.kii.com/en/starts/iot-functions/trigger/) for details.
+
+### Develop mobile app
+
+Users may want to manges their devices from thier phone.
+Please refer to the [guide](http://docs.kii.com/en/guides/thingifsdk/) for developing mobile/web apps.
