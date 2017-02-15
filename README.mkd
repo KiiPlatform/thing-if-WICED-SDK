@@ -1,13 +1,18 @@
-# Kii thing-if with WICED
+# Kii thing-if application on WICED IoT platfrom
 
 Kii thing-if is a cloud based IoT solution platform.
-In this demo, we'll show how to run Kii thing-if application on the WICED.
 
-The goal is to demonstrate how essential features listed bellow works.
+> WICED™ (pronounced “wik-id”) is Cypress IoT platform that enables the rapid development and deployment of connected IoT products.
 
-1. Onboarding
-2. Send Command to the device and handle it
-3. State reporting from the device and confirm it on the web console.
+With this integration you can accerlerate your IoT solution development.
+
+In this demo, we'll show how to run Kii thing-if application on WICED IoT platfrom.
+
+The goal is to demonstrate how essential features in Kii thing-if listed bellow works.
+
+1. Onboarding to Kii thing-if cloud
+2. Send Command though Kii thing-if cloud and add device capability to handle it.
+3. State reporting from the device to Kii thing-if cloud and visualize the device state.
 
 Please refer to the [articile](http://docs.kii.com/en/guides/thingifsdk/)
 for the details of thing-if.
