@@ -44,7 +44,7 @@ Please refer to the [guide](http://docs.kii.com/en/guides/devportal/application_
 * In the target creation dialog put following texts.
   * Target name: "kii" (You can choose arbitrary name)
   * Same as the target name: unchecked
-  * Make target: "demo.kii\_iot-BCM94343W\_AVN download run"
+  * Make target: "demo.kii\_iot-BCM94343W\_AVN download\_apps download run"
 
 
 Then click "OK"
@@ -58,6 +58,8 @@ Show make target view and double click 'kii' created on last step.
 
 Now, the application has been installed on the board and waiting for your
 operation!
+
+If you got error on Mac OS, please remove `downlad_apps` from the target and try again.
 
 ## Run application
 
