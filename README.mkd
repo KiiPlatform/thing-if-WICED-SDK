@@ -1,3 +1,4 @@
+Note: we released new C SDK ebisu, please refer [WICED SDK Sample](https://github.com/KiiPlatform/ebisu/tree/master/tio/wiced-sample). 
 # Kii thing-if application on WICED IoT platfrom
 
 Kii thing-if is a cloud based IoT solution platform.
